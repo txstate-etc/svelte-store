@@ -1,4 +1,4 @@
-import { equal as deepEqual } from './util.js'
+import { equal as deepEqual } from 'txstate-utils'
 import { ActiveStore } from './activestore.js'
 
 /**
