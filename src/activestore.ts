@@ -88,7 +88,7 @@ export class ActiveStore<T> implements Writable<T> {
     // register our new subscriber to receive updates
     this.subscribers.set(id, run)
     // immediately send the current value to our new subscriber
-    run(this.value)
+    run(this.clone(this.value))
 
     // return an unsubscribe function
     return () => {

@@ -1,6 +1,6 @@
 {
   "name": "@txstate-mws/svelte-store",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Support library offering several new types of store compatible with the basic svelte readable/writable stores.",
   "type": "module",
   "module": "dist/index.js",
