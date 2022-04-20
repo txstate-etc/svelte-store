@@ -1,6 +1,6 @@
 {
   "name": "@txstate-mws/svelte-store",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Support library offering several new types of store compatible with the basic svelte readable/writable stores.",
   "type": "module",
   "module": "dist/index.js",
@@ -15,7 +15,7 @@
     "test": "mocha"
   },
   "dependencies": {
-    "txstate-utils": "^1.6.0"
+    "txstate-utils": "^1.6.12"
   },
   "devDependencies": {
     "@types/chai": "^4.3.0",

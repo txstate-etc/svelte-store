@@ -1,6 +1,6 @@
-import { UsableSubject } from './activestore.js'
-import { Store } from './store.js'
 import { get } from 'txstate-utils'
+import { type UsableSubject } from './activestore.js'
+import { SafeStore } from './safestore.js'
 
 export interface DerivedStoreOptions {
   debounce?: number|boolean
@@ -13,7 +13,7 @@ export interface DerivedStoreOptions {
  *
  * If only one parent store, it's possible to use a dot-prop string as the getter.
  */
-export class DerivedStore<DerivedType, ParentType = any> extends Store<DerivedType> {
+export class DerivedStore<DerivedType, ParentType = any> extends SafeStore<DerivedType> {
   constructor (store: UsableSubject<ParentType>|UsableSubject<any>[], getter: string|((value: any) => DerivedType)|((values: any[]) => DerivedType), options?: DerivedStoreOptions) {
     if (typeof getter === 'string') {
       const accessor = getter
@@ -33,17 +33,10 @@ export class DerivedStore<DerivedType, ParentType = any> extends Store<DerivedTy
       for (let i = 0; i < store.length; i++) {
         const idx = i
         const st = store[i]
-        if (st instanceof Store) {
-          this.registerSource(() => st.subscribe(v => {
-            values[idx] = st.clone(v)
-            superSetDebounced()
-          }))
-        } else {
-          this.registerSource(() => st.subscribe(v => {
-            values[idx] = v
-            superSetDebounced()
-          }))
-        }
+        this.registerSource(() => st.subscribe(v => {
+          values[idx] = v
+          superSetDebounced()
+        }))
       }
     } else {
       let timer: any
