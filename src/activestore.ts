@@ -42,6 +42,7 @@ export class ActiveStore<T> implements Writable<T> {
   protected subscribers: Map<string, (s: T) => void>
   private cleanups: (() => void)[] = []
   private sourceInits: (() => () => void)[] = []
+  protected sourcesInitialized = 0
 
   constructor (value: T) {
     this.subscribers = new Map()
@@ -132,7 +133,9 @@ export class ActiveStore<T> implements Writable<T> {
   }
 
   private subscribeToSources () {
+    this.sourcesInitialized = 0
     for (const fn of this.sourceInits) {
+      this.sourcesInitialized++
       this.cleanups.push(fn())
     }
   }

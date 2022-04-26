@@ -19,7 +19,7 @@ describe('deepstore', () => {
     unsubscribe2()
   })
 
-  it('deepstore can stay in sync with a writable', async () => {
+  it('convertstore can stay in sync with a writable', async () => {
     const store = writable(0)
     const syncstore = convertStore(store)
     store.set(5)
@@ -47,6 +47,43 @@ describe('deepstore', () => {
     expect(get(sumstore)).to.equal(5)
     b.set(4)
     expect(get(sumstore)).to.equal(8)
+  })
+
+  it('derivedstore can stay in sync with two parent stores where state is an object', async () => {
+    const a = new Store({ deep: 1 })
+    const b = new Store({ deep: 1 })
+    const sumstore = derivedStore([a, b], ([va, vb]) => va.deep + vb.deep)
+    expect(get(sumstore)).to.equal(2)
+    a.set({ deep: 4 })
+    expect(get(sumstore)).to.equal(5)
+    b.set({ deep: 4 })
+    expect(get(sumstore)).to.equal(8)
+  })
+
+  it('derivedstore can stay in sync with two parent writables where state is an object', async () => {
+    const a = writable({ deep: 2 })
+    const b = writable({ deep: 1 })
+    const sumstore = derivedStore([a, b], ([va, vb]) => va.deep + vb.deep)
+    expect(get(sumstore)).to.equal(3)
+    a.set({ deep: 4 })
+    expect(get(sumstore)).to.equal(5)
+    b.update(v => { v.deep = 4; return v })
+    expect(get(sumstore)).to.equal(8)
+  })
+
+  it('derivedstore works with two parents and a longterm subscriber', async () => {
+    const a = writable({ deep: 2 })
+    const b = writable({ deep: 1 })
+    const sumstore = derivedStore([a, b], ([va, vb]) => va.deep + vb.deep)
+    let run = 0
+    const unsubscribe = sumstore.subscribe(sum => {
+      if (++run === 1) expect(sum).to.equal(3)
+      else if (run === 2) expect(sum).to.equal(5)
+      else expect(sum).to.equal(8)
+    })
+    a.set({ deep: 4 })
+    b.update(v => { v.deep = 4; return v })
+    unsubscribe()
   })
 
   it('substore should stay in sync with parent', async () => {

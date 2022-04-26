@@ -1,6 +1,7 @@
 import { get } from 'txstate-utils'
 import { type UsableSubject } from './activestore.js'
 import { SafeStore } from './safestore.js'
+import { Store } from './store.js'
 
 export interface DerivedStoreOptions {
   debounce?: number|boolean
@@ -9,11 +10,13 @@ export interface DerivedStoreOptions {
 /**
  * Watch one or more parent stores for changes. Each time, run a function to derive
  * a new state from the parent state(s). Subscribers will only be notified if the
- * derived state has changed (uses fast-deep-equal).
+ * derived state has changed (checks deep equality).
  *
  * If only one parent store, it's possible to use a dot-prop string as the getter.
  */
 export class DerivedStore<DerivedType, ParentType = any> extends SafeStore<DerivedType> {
+  protected sourcesInitialized = 0
+
   constructor (store: UsableSubject<ParentType>|UsableSubject<any>[], getter: string|((value: any) => DerivedType)|((values: any[]) => DerivedType), options?: DerivedStoreOptions) {
     if (typeof getter === 'string') {
       const accessor = getter
@@ -21,6 +24,7 @@ export class DerivedStore<DerivedType, ParentType = any> extends SafeStore<Deriv
     }
     super({} as any)
     if (Array.isArray(store)) {
+      if (!store.some(s => s instanceof SafeStore || !(s instanceof Store))) this.clone = Store.prototype.clone
       const values: any[] = []
       let timer: any
       const superSet = () => super.set((getter as (values: any[]) => DerivedType)(values))
@@ -35,10 +39,11 @@ export class DerivedStore<DerivedType, ParentType = any> extends SafeStore<Deriv
         const st = store[i]
         this.registerSource(() => st.subscribe(v => {
           values[idx] = v
-          superSetDebounced()
+          if (this.sourcesInitialized === store.length) superSetDebounced()
         }))
       }
     } else {
+      if (store instanceof Store && !(store instanceof SafeStore)) this.clone = Store.prototype.clone
       let timer: any
       const superSet = (v: any) => super.set((getter as (value: any) => DerivedType)(v))
       const superSetDebounced = options?.debounce == null || options?.debounce === false || options?.debounce < 0

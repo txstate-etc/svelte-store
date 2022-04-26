@@ -1,6 +1,7 @@
-import { get, set } from 'txstate-utils'
+import { clone, get, set } from 'txstate-utils'
 import { Store } from './store.js'
 import { WritableSubject } from './activestore.js'
+import { SafeStore } from './safestore.js'
 
 /**
  * Create a store that represents a part of a larger store. Updates to the parent store will propagate
@@ -20,6 +21,7 @@ export class SubStore<SubType, ParentType = any> extends Store<SubType> {
 
   constructor (store: WritableSubject<ParentType>, getter: keyof ParentType|string|((value: ParentType) => SubType), setter?: (value: SubType, state: ParentType) => ParentType) {
     super({} as any)
+    if (store instanceof Store && !(store instanceof SafeStore)) this.clone = clone
     if (typeof getter === 'string') {
       const accessor = getter
       getter = parentValue => get(parentValue, accessor)
@@ -34,12 +36,6 @@ export class SubStore<SubType, ParentType = any> extends Store<SubType> {
 
   set (value: SubType) {
     this.parentStore.update(parentValue => this.setter(value, parentValue))
-  }
-
-  clone (state: SubType) {
-    // parent store could be a SafeStore - if so we should use its clone function
-    // so that the substore is also safe against mutations
-    return (this.parentStore as Store<any>)?.clone?.(state) ?? state
   }
 }
 
