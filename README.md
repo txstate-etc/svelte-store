@@ -2,7 +2,6 @@
 Support library offering several new types of store compatible with the basic svelte readable/writable stores.
 <br />
 
-
 ## General Interfaces
 Our basic interfaces cover what type of access to the value we want our different subscribers to have:
 ```mermaid
@@ -75,20 +74,20 @@ classDiagram
 
   Store~T~ --|> ActiveStore~T~ : extends
   class Store  {
-    overloads equal(a: T, b: T) => deepEqual(a,b)
+    overrides equal(a: T, b: T) => deepEqual(a,b)
   }
   link Store "https://github.com/txstate-etc/svelte-store/blob/main/src/store.ts#:~:text=export%20class%20Store" "To Source"
 
   ConvertedStore~T~ --|> Store~T~ : extends
   class ConvertedStore  {
-    overloads constructor (value: UsableSubject~T~)
-    overloads set (value: T)
+    overrides constructor (value: UsableSubject~T~)
+    overrides set (value: T)
   }
   link ConvertedStore "https://github.com/txstate-etc/svelte-store/blob/main/src/convertedstore.ts#:~:text=export%20class%20ConvertedStore" "To Source"
   
   SafeStore~T~ --|> Store~T~ : extends
   class SafeStore  {
-    overloads clone(value: T) => clone(value)
+    overrides clone(value: T) => clone(value)
   }
   link SafeStore "https://github.com/txstate-etc/svelte-store/blob/main/src/safestore.ts#:~:text=export%20class%20SafeStore" "To Source"
 
@@ -96,15 +95,15 @@ classDiagram
   class SubStore  {
     protected parentStore: WritableSubject~ParentType~
     protected setter: (value: SubType, state: ParentType) => ParentType
-    overloads set(value: T)
-    overloads constructor(\nstore: WirteableSubject~ParentType~,\ngetter: keyof ParentType|string|(value: ParentType) => SubType,\nsetter?: (value: SubType, state: ParentType) => ParentType\n)
+    overrides set(value: T)
+    overrides constructor(\nstore: WirteableSubject~ParentType~,\ngetter: keyof ParentType|string|(value: ParentType) => SubType,\nsetter?: (value: SubType, state: ParentType) => ParentType\n)
   }
   link SubStore "https://github.com/txstate-etc/svelte-store/blob/main/src/substore.ts#:~:text=export%20class%20SubStore" "To Source"
 
   DerivedStore~DerivedType, ParentType=any~ --|> SafeStore~DerivedType~ : extends
   class DerivedStore  {
     protected sourcesInitialized = 0
-    overloads constructor(\nstore: UsableSubject~ParentType~ | UsableSubject~any~[],\ngetter: string |((value: any) => DerivedType) | ((values: any[]) => DerivedType),\noptions?: DerivedStoreOptions\n)
+    overrides constructor(\nstore: UsableSubject~ParentType~ | UsableSubject~any~[],\ngetter: string |((value: any) => DerivedType) | ((values: any[]) => DerivedType),\noptions?: DerivedStoreOptions\n)
   }
   link DerivedStore "https://github.com/txstate-etc/svelte-store/blob/main/src/derivedstore.ts#:~:text=export%20class%20DerivedStore" "To Source"
 ```
