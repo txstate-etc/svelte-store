@@ -44,7 +44,7 @@ direction LR
 <br />
 
 ## New Store Classes
-Due to the sub-property mutability limitations of the native Svelte Stores a solution was desired that would allow flexibility for more granularly nested value states. In addition there are situations where callbacks are desired on value updates regardless of the value actually changing so to support this - and deeper granularity/nesting in the stores state - this library adds an `equal` function to stores to allow for control over how value callbacks are triggered on `set` and `update`. Also, with the addition of more deeply nested states, the store functionality needs to include a `clone` operation that allows for control of the mutatbility of the value state returned as well as the granularity of what is returned from the store.
+Due to the sub-property mutability limitations of the native Svelte Stores a solution was desired that would allow flexibility for more granularly nested value states. In addition there are situations where callbacks are desired on value updates regardless of the value actually changing so to support this - and deeper granularity/nesting in the stores state - this library adds an `equal` function to stores to allow for control over how value callbacks are triggered on `set` and `update`. Also, with the addition of more deeply nested states, the store functionality needs to include a `clone` operation that allows for control of the mutatbility of the value state returned as well as the granularity of what is returned from the store. In addition to those extentions there may be cases where the external sources of a store need to be changed out so `unregisterSources` is added to provide a means to run all cleanup functions needed and reset the store to make it ready for a new source provided to it by the additionally added [`registerSource`](https://github.com/txstate-etc/svelte-store/blob/main/src/activestore.ts#:~:text=protected%20registerSource) function.
 
 - `ActiveStore` - actively calls subscribers back regardless of whether the update to value was a change or not.
 - `Store` - extends `ActiveStore` overriding its `equal` to do a `deepEqual`. Note that this not only returns back to the traditional callback handling on equality but also adds a deeper checking for equality so that any potential sub-states, or object properties, will trigger callbacks instead of just the parent state being evaluated.
@@ -73,7 +73,7 @@ classDiagram
     equal(a: T, b: T) => false
     set(value: T)
     update(updater: (value: T) => T)
-    subscribe(run: (s: T) => any)
+    subscribe(run: (s: T) => any) => unsubscribe: () => void
     clearSubscribers()
     protected registerSource(subscribe: () => () => void) => unsubscribe: () => void
     protected unregisterSources()
