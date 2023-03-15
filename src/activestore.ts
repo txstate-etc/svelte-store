@@ -12,15 +12,15 @@ export interface SettableSubject<T> extends WritableSubject<T> {
   set: (value: T) => void
 }
 
-export function isUsable <T> (value: T|UsableSubject<T>|undefined): value is UsableSubject<T> {
+export function isUsable <T> (value: T | UsableSubject<T> | undefined): value is UsableSubject<T> {
   return !!value && typeof (value as any).subscribe === 'function'
 }
 
-export function isWritable <T> (value: T|UsableSubject<T>|undefined): value is WritableSubject<T> {
+export function isWritable <T> (value: T | UsableSubject<T> | undefined): value is WritableSubject<T> {
   return isUsable(value) && typeof (value as any).update === 'function'
 }
 
-export function isSettable <T> (value: T|UsableSubject<T>|undefined): value is SettableSubject<T> {
+export function isSettable <T> (value: T | UsableSubject<T> | undefined): value is SettableSubject<T> {
   return isWritable(value) && typeof (value as any).set === 'function'
 }
 

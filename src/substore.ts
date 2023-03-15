@@ -1,7 +1,8 @@
 import { clone, get, set } from 'txstate-utils'
 import { Store } from './store.js'
-import { WritableSubject } from './activestore.js'
+import { type WritableSubject } from './activestore.js'
 import { SafeStore } from './safestore.js'
+type ObjectOrArray = Record<string, any> | Array<any> | null | undefined
 
 /**
  * Create a store that represents a part of a larger store. Updates to the parent store will propagate
@@ -15,13 +16,13 @@ import { SafeStore } from './safestore.js'
  * could be used with the getter string "deep.value". The SubStore's initial state would be "here", and
  * updating it to "there" would update the parent store state to { deep: { value: 'there' }, hello: 'world' }
  */
-export class SubStore<SubType, ParentType = any> extends Store<SubType> {
+export class SubStore<SubType, ParentType extends ObjectOrArray = ObjectOrArray> extends Store<SubType> {
   protected parentStore: WritableSubject<ParentType>
   protected setter: (value: SubType, state: ParentType) => ParentType
 
-  constructor (store: WritableSubject<ParentType>, getter: keyof ParentType|string|((value: ParentType) => SubType), setter?: (value: SubType, state: ParentType) => ParentType) {
+  constructor (store: WritableSubject<ParentType>, getter: keyof ParentType | string | ((value: ParentType) => SubType), setter?: (value: SubType, state: ParentType) => ParentType) {
     super({} as any)
-    if (store instanceof Store && !(store instanceof SafeStore)) this.clone = clone
+    if (!(store instanceof SafeStore)) this.clone = clone
     if (typeof getter === 'string') {
       const accessor = getter
       getter = parentValue => get(parentValue, accessor)
@@ -35,13 +36,13 @@ export class SubStore<SubType, ParentType = any> extends Store<SubType> {
   }
 
   set (value: SubType) {
-    this.parentStore.update(parentValue => this.setter(value, parentValue))
+    this.parentStore.update(parentValue => { return this.setter(value, parentValue) })
   }
 }
 
-export function subStore <SubType, ParentType, A extends keyof ParentType> (store: WritableSubject<ParentType>, accessor: A): SubStore<ParentType[A], ParentType>
-export function subStore <SubType, ParentType = any> (store: WritableSubject<ParentType>, accessor: string): SubStore<SubType, ParentType>
-export function subStore <SubType, ParentType> (store: WritableSubject<ParentType>, getter: (value: ParentType) => SubType, setter: (value: SubType, state: ParentType) => ParentType): SubStore<SubType, ParentType>
-export function subStore <SubType, ParentType> (store: WritableSubject<ParentType>, getter: keyof ParentType|string|((value: ParentType) => SubType), setter?: (value: SubType, state: ParentType) => ParentType) {
+export function subStore <SubType, ParentType extends ObjectOrArray, A extends keyof ParentType> (store: WritableSubject<ParentType>, accessor: A): SubStore<ParentType[A], ParentType>
+export function subStore <SubType, ParentType extends ObjectOrArray = ObjectOrArray> (store: WritableSubject<ParentType>, accessor: string): SubStore<SubType, ParentType>
+export function subStore <SubType, ParentType extends ObjectOrArray> (store: WritableSubject<ParentType>, getter: (value: ParentType) => SubType, setter: (value: SubType, state: ParentType) => ParentType): SubStore<SubType, ParentType>
+export function subStore <SubType, ParentType extends ObjectOrArray = ObjectOrArray> (store: WritableSubject<ParentType>, getter: keyof ParentType | string | ((value: ParentType) => SubType), setter?: (value: SubType, state: ParentType) => ParentType) {
   return new SubStore(store, getter, setter)
 }

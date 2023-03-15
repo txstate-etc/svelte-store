@@ -4,7 +4,7 @@ import { SafeStore } from './safestore.js'
 import { Store } from './store.js'
 
 export interface DerivedStoreOptions {
-  debounce?: number|boolean
+  debounce?: number | boolean
 }
 
 /**
@@ -14,20 +14,20 @@ export interface DerivedStoreOptions {
  *
  * If only one parent store, it's possible to use a dot-prop string as the getter.
  */
-export class DerivedStore<DerivedType, ParentType = any> extends SafeStore<DerivedType> {
+export class DerivedStore<DerivedType, ParentType = any> extends Store<DerivedType> {
   protected sourcesInitialized = 0
 
-  constructor (store: UsableSubject<ParentType>|UsableSubject<any>[], getter: string|((value: any) => DerivedType)|((values: any[]) => DerivedType), options?: DerivedStoreOptions) {
+  constructor (store: UsableSubject<ParentType> | UsableSubject<any>[], getter: string | ((value: any) => DerivedType) | ((values: any[]) => DerivedType), options?: DerivedStoreOptions) {
     if (typeof getter === 'string') {
       const accessor = getter
       getter = (parentValue: any) => get(parentValue, accessor)
     }
     super({} as any)
     if (Array.isArray(store)) {
-      if (!store.some(s => s instanceof SafeStore || !(s instanceof Store))) this.clone = Store.prototype.clone
+      if (!store.every(s => s instanceof SafeStore)) this.clone = SafeStore.prototype.clone
       const values: any[] = []
       let timer: any
-      const superSet = () => super.set((getter as (values: any[]) => DerivedType)(values))
+      const superSet = () => { super.set((getter as (values: any[]) => DerivedType)(values)) }
       const superSetDebounced = options?.debounce == null || options?.debounce === false || options?.debounce < 0
         ? superSet
         : () => {
@@ -43,14 +43,14 @@ export class DerivedStore<DerivedType, ParentType = any> extends SafeStore<Deriv
         }))
       }
     } else {
-      if (store instanceof Store && !(store instanceof SafeStore)) this.clone = Store.prototype.clone
+      if (!(store instanceof SafeStore)) this.clone = SafeStore.prototype.clone
       let timer: any
-      const superSet = (v: any) => super.set((getter as (value: any) => DerivedType)(v))
+      const superSet = (v: any) => { super.set((getter as (value: any) => DerivedType)(v)) }
       const superSetDebounced = options?.debounce == null || options?.debounce === false || options?.debounce < 0
         ? superSet
         : (v: any) => {
             clearTimeout(timer)
-            timer = setTimeout(() => superSet(v), options.debounce === true ? 0 : options.debounce as number)
+            timer = setTimeout(() => { superSet(v) }, options.debounce === true ? 0 : options.debounce as number)
           }
       this.registerSource(() => store.subscribe(superSetDebounced))
     }
@@ -65,6 +65,6 @@ export function derivedStore <DerivedType, T1, T2, T3> (store: [UsableSubject<T1
 export function derivedStore <DerivedType, T1, T2, T3, T4> (store: [UsableSubject<T1>, UsableSubject<T2>, UsableSubject<T3>, UsableSubject<T4>], getter: (value: [T1, T2, T3, T4]) => DerivedType, options?: DerivedStoreOptions): DerivedStore<DerivedType>
 export function derivedStore <DerivedType, T1, T2, T3, T4, T5> (store: [UsableSubject<T1>, UsableSubject<T2>, UsableSubject<T3>, UsableSubject<T4>, UsableSubject<T5>], getter: (value: [T1, T2, T3, T4, T5]) => DerivedType, options?: DerivedStoreOptions): DerivedStore<DerivedType>
 export function derivedStore <DerivedType> (store: UsableSubject<any>[], getter: (value: any[]) => DerivedType, options?: DerivedStoreOptions): DerivedStore<DerivedType>
-export function derivedStore <DerivedType> (store: UsableSubject<any>|UsableSubject<any>[], getter: string|((value: any) => DerivedType)|((values: any[]) => DerivedType), options?: DerivedStoreOptions) {
+export function derivedStore <DerivedType> (store: UsableSubject<any> | UsableSubject<any>[], getter: string | ((value: any) => DerivedType) | ((values: any[]) => DerivedType), options?: DerivedStoreOptions) {
   return new DerivedStore(store, getter, options)
 }

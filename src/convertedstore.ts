@@ -1,4 +1,4 @@
-import { isSettable, UsableSubject } from './activestore.js'
+import { isSettable, type UsableSubject } from './activestore.js'
 import { Store } from './store.js'
 
 /**
@@ -15,7 +15,7 @@ export class ConvertedStore<T> extends Store<T> {
   constructor (value: UsableSubject<T>) {
     super({} as any)
     this.valueStore = value
-    this.registerSource(() => this.valueStore.subscribe(v => this.set(v)))
+    this.registerSource(() => this.valueStore.subscribe(v => { this.set(v) }))
   }
 
   set (value: T) {
