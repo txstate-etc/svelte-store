@@ -3,32 +3,37 @@ Support library offering several new types of store compatible with the basic sv
 <br />
 
 ## General Interfaces
-Our basic interfaces cover what type of access to the value we want our different subscribers to have:
+Starting with the Svelte `Writeable` interface to ensure interoperability this library defines some of its own classifications of stores that fit the extention needs of this library as well as some types for specifying options to different store constructors and behavior modifiers.
 ```mermaid
 classDiagram
 direction LR
+  class Writeable~T~ {
+    <<svelte store interface>>
+    subscribe(this: void, run: Subscriber~T~, invalidate?: Invalidator~T~): Unsubscriber
+    set(this: void, value: T): void
+    update(this: void, updater: Updater~T~): void
+  }
+  link Writeable "https://svelte.dev/docs#run-time-svelte-store" "Svelte Writeable Store"
+  
   class UsableSubject {
     <<interface>>
-    subscribe(observer: (value: T) => void) => () => void
+    subscribe(observer: (value: T) => void): () => void
   }
   link UsableSubject "https://github.com/txstate-etc/svelte-store/blob/main/src/activestore.ts#:~:text=export%20interface%20UsableSubject" "To Source"
 
   WriteableSubject~T~ --|> UsableSubject~T~ : extends
   class WriteableSubject {
     <<interface>>
-    update(updater: (value: T) => T) => void
+    update(updater: (value: T) => T): void
   }
   link WriteableSubject "https://github.com/txstate-etc/svelte-store/blob/main/src/activestore.ts#:~:text=export%20interface%20WritableSubject" "To Source"
 
   SetableSubject~T~ --|> WriteableSubject~T~ : extends
   class SetableSubject {
      <<interface>>
-     set(value: T) => void
+     set(value: T): void
   }
   link SetableSubject "https://github.com/txstate-etc/svelte-store/blob/main/src/activestore.ts#:~:text=export%20interface%20SettableSubject" "To Source"
-  
-  class Writeable~T~ {<<svelte store>>}
-  link Writeable "https://svelte.dev/docs#run-time-svelte-store" "Svelte Writeable Store"
   
   class DerivedStoreOptions {
     <<interface>>
@@ -39,7 +44,7 @@ direction LR
 <br />
 
 ## New Store Classes
-Due to the sub-property mutability limitations of the native Svelte Stores a solution was desired that would allow flexibility for more deeply nested value states. In addition there are situations where callbacks are desired on value updates regardless of the value actually changing.
+Due to the sub-property mutability limitations of the native Svelte Stores a solution was desired that would allow flexibility for more granularly nested value states. In addition there are situations where callbacks are desired on value updates regardless of the value actually changing so to support this - and deeper granularity/nesting in the stores state - this library adds an `equal` function to stores to allow for control over how value callbacks are triggered on `set` and `update`. Also, with the addition of more deeply nested states, the store functionality needs to include a `clone` operation that allows for control of the mutatbility of the value state returned as well as the granularity of what is returned from the store.
 
 - `ActiveStore` - actively calls subscribers back regardless of whether the update to value was a change or not.
 - `Store` - extends `ActiveStore` overriding its `equal` to do a `deepEqual`. Note that this not only returns back to the traditional callback handling on equality but also adds a deeper checking for equality so that any potential sub-states, or object properties, will trigger callbacks instead of just the parent state being evaluated.
@@ -50,7 +55,12 @@ Due to the sub-property mutability limitations of the native Svelte Stores a sol
 
 ```mermaid
 classDiagram
-  class Writeable~T~ {<<svelte store>>}
+  class Writeable~T~ {
+    <<svelte store interface>>
+    subscribe(this: void, run: Subscriber~T~, invalidate?: Invalidator~T~): Unsubscriber
+    set(this: void, value: T): void
+    update(this: void, updater: Updater~T~): void
+  }
   link Writeable "https://svelte.dev/docs#run-time-svelte-store" "Svelte Writeable Store"
 
   ActiveStore~T~ --|> Writeable~T~ : implements
@@ -74,7 +84,7 @@ classDiagram
 
   Store~T~ --|> ActiveStore~T~ : extends
   class Store  {
-    overrides equal(a: T, b: T) => deepEqual(a,b)
+    overrides equal(a: T, b: T): =>` deepEqual(a,b)
   }
   link Store "https://github.com/txstate-etc/svelte-store/blob/main/src/store.ts#:~:text=export%20class%20Store" "To Source"
 
